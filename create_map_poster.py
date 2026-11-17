@@ -493,6 +493,8 @@ def create_poster(
     display_city=None,
     display_country=None,
     fonts=None,
+    dpi=300,
+    show_attribution=True,
 ):
     """
     Generate a complete map poster with roads, water, parks, and typography.
@@ -510,6 +512,8 @@ def create_poster(
         width: Poster width in inches (default: 12)
         height: Poster height in inches (default: 16)
         country_label: Optional override for country text on poster
+        dpi: Output resolution for png (default: 300)
+        show_attribution: Draw the OpenStreetMap credit (default: True)
         _name_label: Optional override for city name (unused, reserved for future use)
 
     Raises:
@@ -735,23 +739,24 @@ def create_poster(
     )
 
     # --- ATTRIBUTION (bottom right) ---
-    if FONTS:
-        font_attr = FontProperties(fname=FONTS["light"], size=8)
-    else:
-        font_attr = FontProperties(family="monospace", size=8)
+    if show_attribution:
+        if FONTS:
+            font_attr = FontProperties(fname=FONTS["light"], size=8)
+        else:
+            font_attr = FontProperties(family="monospace", size=8)
 
-    ax.text(
-        0.98,
-        0.02,
-        "© OpenStreetMap contributors",
-        transform=ax.transAxes,
-        color=THEME["text"],
-        alpha=0.5,
-        ha="right",
-        va="bottom",
-        fontproperties=font_attr,
-        zorder=11,
-    )
+        ax.text(
+            0.98,
+            0.02,
+            "© OpenStreetMap contributors",
+            transform=ax.transAxes,
+            color=THEME["text"],
+            alpha=0.5,
+            ha="right",
+            va="bottom",
+            fontproperties=font_attr,
+            zorder=11,
+        )
 
     # 5. Save
     print(f"Saving to {output_file}...")
@@ -765,7 +770,7 @@ def create_poster(
 
     # DPI matters mainly for raster formats
     if fmt == "png":
-        save_kwargs["dpi"] = 300
+        save_kwargs["dpi"] = dpi
 
     plt.savefig(output_file, format=fmt, **save_kwargs)
 
@@ -956,6 +961,17 @@ Examples:
         choices=["png", "svg", "pdf"],
         help="Output format for the poster (default: png)",
     )
+    parser.add_argument(
+        "--dpi",
+        type=int,
+        default=300,
+        help="Output resolution for png (default: 300)",
+    )
+    parser.add_argument(
+        "--no-attribution",
+        action="store_true",
+        help="Remove OpenStreetMap attribution (for private use only)",
+    )
 
     args = parser.parse_args()
 
@@ -1038,6 +1054,8 @@ Examples:
                 display_city=args.display_city,
                 display_country=args.display_country,
                 fonts=custom_fonts,
+                dpi=args.dpi,
+                show_attribution=not args.no_attribution,
             )
 
         print("\n" + "=" * 50)
