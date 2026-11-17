@@ -570,17 +570,7 @@ def create_poster(
 
     # 3. Plot Layers
     # Layer 1: Polygons (filter to only plot polygon/multipolygon geometries, not points)
-    if water is not None and not water.empty:
-        # Filter to only polygon/multipolygon geometries to avoid point features showing as dots
-        water_polys = water[water.geometry.type.isin(["Polygon", "MultiPolygon"])]
-        if not water_polys.empty:
-            # Project water features in the same CRS as the graph
-            try:
-                water_polys = ox.projection.project_gdf(water_polys)
-            except Exception:
-                water_polys = water_polys.to_crs(g_proj.graph['crs'])
-            water_polys.plot(ax=ax, facecolor=THEME['water'], edgecolor='none', zorder=0.5)
-
+    # Parks first, water on top: some lakes are also tagged as parks in OSM
     if parks is not None and not parks.empty:
         # Filter to only polygon/multipolygon geometries to avoid point features showing as dots
         parks_polys = parks[parks.geometry.type.isin(["Polygon", "MultiPolygon"])]
@@ -590,7 +580,18 @@ def create_poster(
                 parks_polys = ox.projection.project_gdf(parks_polys)
             except Exception:
                 parks_polys = parks_polys.to_crs(g_proj.graph['crs'])
-            parks_polys.plot(ax=ax, facecolor=THEME['parks'], edgecolor='none', zorder=0.8)
+            parks_polys.plot(ax=ax, facecolor=THEME['parks'], edgecolor='none', zorder=0.5)
+
+    if water is not None and not water.empty:
+        # Filter to only polygon/multipolygon geometries to avoid point features showing as dots
+        water_polys = water[water.geometry.type.isin(["Polygon", "MultiPolygon"])]
+        if not water_polys.empty:
+            # Project water features in the same CRS as the graph
+            try:
+                water_polys = ox.projection.project_gdf(water_polys)
+            except Exception:
+                water_polys = water_polys.to_crs(g_proj.graph['crs'])
+            water_polys.plot(ax=ax, facecolor=THEME['water'], edgecolor='none', zorder=0.8)
     # Layer 2: Roads with hierarchy coloring
     print("Applying road hierarchy colors...")
     edge_colors = get_edge_colors_by_type(g_proj)
